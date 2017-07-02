@@ -12,14 +12,19 @@ void findcov_(int *NVAR, int *NROW, int *NV, double MType[*NROW][*NVAR], double 
     int i, j;
     int I2;
     double Covariance(int *NObs, int *nvar, int c1, int c2, double MType[*NObs][*nvar]);
-
+    
     printf("IN FINDCOV #1\n");
-
+    
     #pragma omp parallel for private(i, j, I2) shared(NVAR, COV, MType)
     for(j = 0; j < *NVAR; ++ j){
         for(i = 0; i < *NV; ++ i){
-            I2 = (i+j-1)%(*NVAR) + 1;
+            I2 = (i+j+1)%(*NVAR);
             COV[i][j] = Covariance(NROW, NVAR, j, I2, MType);
+
+            if(i == 10 && j == 221){
+                printf("COV[222][11] == %f\n", COV[10][221]);
+                printf("I2 == %d\n", I2);
+            }
         }
     }
 
@@ -29,8 +34,6 @@ void findcov_(int *NVAR, int *NROW, int *NV, double MType[*NROW][*NVAR], double 
 }
 
 double Covariance(int *NObs, int* nvar, int c1, int c2, double MType[*NObs][*nvar]){
-    //X1[?] == MType[?][c1]
-    //X2[?] == MType[?][c2]
     int IObs, NumMissing = 0;
     double result = 0.0;
     double MeanX1 = 0.0, MeanX2 = 0.0;
@@ -63,7 +66,7 @@ char IsMissingPheno(double *Phenotype){
 
     if(isnan(*Phenotype))result = TRUE;
     else
-        if(abs(*Phenotype - MissingPheno) <= 0.001)result = TRUE;
+        if(fabs(*Phenotype - MissingPheno) <= 0.001)result = TRUE;
     
     return result;
 }
