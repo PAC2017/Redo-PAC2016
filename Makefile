@@ -1,7 +1,7 @@
 
 FC=ifort
 LD= ifort
-FFLAGS= -qopenmp -mcmodel=large
+FFLAGS= -qopenmp -mcmodel=large -g
 
 main: main.o Covariance1.o Covariance.o check.o
 	${FC} ${FFLAGS} main.o Covariance1.o Covariance.o check.o -o main
@@ -12,7 +12,7 @@ Covariance1.o: Covariance1.f90
 # Covariance.o: Covariance.f90
 # 	${FC} ${FFLAGS} -c Covariance.f90
 Covariance.o: co.c
-	icc -qopenmp -mcmodel=large -c co.c -o Covariance.o
+	icc -qopenmp -mcmodel=large -g -c co.c -o Covariance.o
 
 check.o: check.f90
 	${FC} ${FFLAGS} -c check.f90

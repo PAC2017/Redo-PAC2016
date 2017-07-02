@@ -6,10 +6,11 @@
 #define TRUE 1
 #define FALSE 0
 
-void findcov_(int *NVAR, int *NROW, int *NV, double ** MType, double **COV){
+void findcov_(int *NVAR, int *NROW, int *NV, double MType[*NROW][*NVAR], double ** COV){
+    //In Fortran is MType[NVAR][NROW]
     int i, j;
     int I2;
-    double Covariance(int *NObs, double *X1, double *X2);
+    double Covariance(int *NObs, int *nvar, int c1, int c2, double MType[*NObs][*nvar]);
     /*
     double *elements;
     elements = Malloc(double, NVAR*NROW);
@@ -17,7 +18,7 @@ void findcov_(int *NVAR, int *NROW, int *NV, double ** MType, double **COV){
     for(i = 0, j = 0; i < NROW; ++ i, j += NVAR){MType[i] = &elements[j];}
     */
 
-    printf("IN FINDCOV #1");
+    printf("IN FINDCOV #1\n");
 
     //TODO: BETTER METHOD
     // double tmp;
@@ -35,44 +36,48 @@ void findcov_(int *NVAR, int *NROW, int *NV, double ** MType, double **COV){
     COV = Malloc(double *, *NV);
     for(i = 0, j = 0; i < *NV; ++ i, j += *NVAR){COV[i] = &elements2[j];}
 
-    printf("IN FINDCOV #3");
+    printf("IN FINDCOV #3\n");
 
+    double tmp_cov;
     #pragma omp parallel
     {
         #pragma omp for
-        for(i = 0; i < *NVAR; ++ i){
-            for(j = 0; j < *NV; ++ j){
+        for(i = 0; i < *NV; ++ i){
+            for(j = 0; j < *NVAR; ++ j){
                 I2 = (i+j-1)%(*NVAR) + 1;
-                COV[j][i] = Covariance(NROW, MType[i], MType[I2]);
+                tmp_cov = Covariance(NROW, NVAR, i, I2, MType);
+                COV[i][j] = tmp_cov;
             }
         }
     }
 
-    printf("IN FINDCOV #4");
+    printf("IN FINDCOV #4\n");
 
     free(elements2);
     free(COV);
 
-    printf("IN FINDCOV #5");
+    printf("IN FINDCOV #5\n");
 
     return;
 }
 
-double Covariance(int *NObs, double *X1, double *X2){
+double Covariance(int *NObs, int* nvar, int c1, int c2, double MType[*NObs][*nvar]){
+    //X1[?] == MType[?][c1]
+    //X2[?] == MType[?][c2]
     int IObs, NumMissing = 0;
     double result = 0.0;
     double MeanX1 = 0.0, MeanX2 = 0.0;
     char IsMissingPheno(double*);
 
-    printf("NObs == %d\n", *NObs);
     for(IObs = 0; IObs < *NObs; ++ IObs){
-        printf("IObs == %d\n", IObs);
-        if(IsMissingPheno(&(X1[IObs])) || IsMissingPheno(&(X2[IObs])))
+        //printf("IObs == %d\n", IObs);
+        //printf("X1[IObs] == %f\n", X1[IObs]);
+        if(IsMissingPheno(&(MType[IObs][c1])) || IsMissingPheno(&(MType[IObs][c2])))
             ++ NumMissing;
         else{
-            MeanX1 += X1[IObs];
-            MeanX2 += X2[IObs];
-            result += X1[IObs]*X2[IObs];
+            MeanX1 += MType[IObs][c1];
+            MeanX2 += MType[IObs][c2];
+            result += MType[IObs][c1]*MType[IObs][c2];
         }
     }
 
@@ -91,7 +96,7 @@ char IsMissingPheno(double *Phenotype){
     static double MissingPheno = 65.0;
     char result = FALSE;
 
-    printf("$$$$ Phenotype == %f\n", *Phenotype);
+    //printf("$$$$ Phenotype == %f\n", *Phenotype);
 
     if(isnan(*Phenotype))result = TRUE;
     else
