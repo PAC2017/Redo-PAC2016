@@ -6,7 +6,7 @@
 #define TRUE 1
 #define FALSE 0
 
-void findcov_(int *NVAR, int *NROW, int *NV, double MType[*NROW][*NVAR], double ** COV){
+void findcov_(int *NVAR, int *NROW, int *NV, double MType[*NROW][*NVAR], double COV[*NV][*NVAR]){
     //In Fortran is MType[NVAR][NROW]
     int i, j;
     int I2;
@@ -20,43 +20,15 @@ void findcov_(int *NVAR, int *NROW, int *NV, double MType[*NROW][*NVAR], double 
 
     printf("IN FINDCOV #1\n");
 
-    //TODO: BETTER METHOD
-    // double tmp;
-    // int nrow_half = NROW/2, nvar_half = NVAR/2;
-    // for(i = 0; i <= nrow_half; ++ i){
-    //     for(j = 0; j <= nvar_half; ++ j){
-    //         tmp = MType[i][j];
-    //         MType[i][j] = MType[NROW-i-1][NVAR-j-1];
-    //         MType[NROW-i-1][NVAR-j-1] = tmp;
-    //     }
-    // }
-
-    double *elements2;
-    elements2 = Malloc(double, (*NVAR)*(*NV));
-    COV = Malloc(double *, *NV);
-    for(i = 0, j = 0; i < *NV; ++ i, j += *NVAR){COV[i] = &elements2[j];}
-
-    printf("IN FINDCOV #3\n");
-
-    double tmp_cov;
-    #pragma omp parallel
-    {
-        #pragma omp for
+    #pragma omp parallel for private(i, j, I2) shared(NVAR, COV, MType)
+    for(j = 0; j < *NVAR; ++ j){
         for(i = 0; i < *NV; ++ i){
-            for(j = 0; j < *NVAR; ++ j){
-                I2 = (i+j-1)%(*NVAR) + 1;
-                tmp_cov = Covariance(NROW, NVAR, i, I2, MType);
-                COV[i][j] = tmp_cov;
-            }
+            I2 = (i+j-1)%(*NVAR) + 1;
+            COV[i][j] = Covariance(NROW, NVAR, j, I2, MType);
         }
     }
 
-    printf("IN FINDCOV #4\n");
-
-    free(elements2);
-    free(COV);
-
-    printf("IN FINDCOV #5\n");
+    printf("IN FINDCOV #2\n");
 
     return;
 }
@@ -72,7 +44,7 @@ double Covariance(int *NObs, int* nvar, int c1, int c2, double MType[*NObs][*nva
     for(IObs = 0; IObs < *NObs; ++ IObs){
         //printf("IObs == %d\n", IObs);
         //printf("X1[IObs] == %f\n", X1[IObs]);
-        if(IsMissingPheno(&(MType[IObs][c1])) || IsMissingPheno(&(MType[IObs][c2])))
+        if(IsMissingPheno(&(MType[IObs][c1])) == TRUE || IsMissingPheno(&(MType[IObs][c2])) == TRUE)
             ++ NumMissing;
         else{
             MeanX1 += MType[IObs][c1];
