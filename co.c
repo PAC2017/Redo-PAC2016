@@ -8,15 +8,10 @@
 
 void findcov_(int *NVAR, int *NROW, int *NV, double MType[*NROW][*NVAR], double COV[*NV][*NVAR]){
     //In Fortran is MType[NVAR][NROW]
+    //In Fortran is COV[NVAR][NV]
     int i, j;
     int I2;
     double Covariance(int *NObs, int *nvar, int c1, int c2, double MType[*NObs][*nvar]);
-    /*
-    double *elements;
-    elements = Malloc(double, NVAR*NROW);
-    MType = Malloc(double *, NROW);
-    for(i = 0, j = 0; i < NROW; ++ i, j += NVAR){MType[i] = &elements[j];}
-    */
 
     printf("IN FINDCOV #1\n");
 
@@ -42,8 +37,6 @@ double Covariance(int *NObs, int* nvar, int c1, int c2, double MType[*NObs][*nva
     char IsMissingPheno(double*);
 
     for(IObs = 0; IObs < *NObs; ++ IObs){
-        //printf("IObs == %d\n", IObs);
-        //printf("X1[IObs] == %f\n", X1[IObs]);
         if(IsMissingPheno(&(MType[IObs][c1])) == TRUE || IsMissingPheno(&(MType[IObs][c2])) == TRUE)
             ++ NumMissing;
         else{
@@ -53,13 +46,13 @@ double Covariance(int *NObs, int* nvar, int c1, int c2, double MType[*NObs][*nva
         }
     }
 
-    MeanX1 /= (*NObs-NumMissing);
-    MeanX2 /= (*NObs-NumMissing);
+    MeanX1 = MeanX1/(*NObs-NumMissing);
+    MeanX2 = MeanX2/(*NObs-NumMissing);
 
-    if(*NObs - NumMissing <= 0)
+    if((*NObs - NumMissing) <= 0)
         result = 0.0;
     else
-        result =result/(*NObs-NumMissing) - MeanX1*MeanX2;
+        result = result/(*NObs-NumMissing) - MeanX1*MeanX2;
     
     return result;
 }
@@ -67,8 +60,6 @@ double Covariance(int *NObs, int* nvar, int c1, int c2, double MType[*NObs][*nva
 char IsMissingPheno(double *Phenotype){
     static double MissingPheno = 65.0;
     char result = FALSE;
-
-    //printf("$$$$ Phenotype == %f\n", *Phenotype);
 
     if(isnan(*Phenotype))result = TRUE;
     else
