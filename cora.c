@@ -54,16 +54,16 @@ void findcov_(int *NVAR, int *NROW, int *NV, double MType[*NROW][*NVAR], double 
     for(k = 0; k < (nrow); ++ k){
         for(j = 0; j < (nvar); ++ j){
             for(i = 0; i < (nv); ++ i){
-                I2 = (i+j+1)%(nvar); //TODO: slow
-                t1 = MType[k][j];//TODO: slow
-                t2 = MType[k][I2];//TODO: slow
+                I2 = (i+j+1)%(nvar);        //TOIMPR: 21.8% 
+                t1 = MType[k][j];           //TOIMPR: 3.0%
+                t2 = MType[k][I2];          //TOIMPR: 5.8%
             
-                if(IsMissingPheno(t1) || IsMissingPheno(t2)){//TODO: slow
-                    (Mean[j][i].n) += 1;//TODO: slow
+                if(IsMissingPheno(t1) || IsMissingPheno(t2)){ //TOIMPR: 12.5%
+                    (Mean[j][i].n) += 1;    //TOIMPR: 3.3%
                 }else{
-                    (Mean[j][i].m1) += t1;//TODO: slow
-                    (Mean[j][i].m2) += t2;//TODO: slow
-                    (Mean[j][i].m3) += t1*t2;//TODO: slow
+                    (Mean[j][i].m1) += t1;  //TOIMPR: 9.3%
+                    (Mean[j][i].m2) += t2;  //TOIMPR: 15.7%
+                    (Mean[j][i].m3) += t1*t2;//TOIMPR: 14.4%
                 }
             }
         }
