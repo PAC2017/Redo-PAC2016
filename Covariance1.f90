@@ -66,8 +66,7 @@
             Covariance_check=Covariance_check/(NObs-NumMissing)-MeanX1*MeanX2
    
         ENDIF
-
-
+        
         RETURN
 
     END FUNCTION Covariance_check
